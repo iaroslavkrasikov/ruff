@@ -97,7 +97,15 @@ fn register_lints(registry: &mut LintRegistryBuilder) {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, get_size2::GetSize)]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "Independent analysis settings"
+)]
 pub struct AnalysisSettings {
+    /// Whether literal `None` parameter defaults widen annotated types to `T | None`
+    /// in both the function body and its call signature.
+    pub implicit_none_value: bool,
+
     /// Whether narrowing with generic classes uses the top materialization.
     pub strict_generic_narrowing: bool,
 
@@ -121,6 +129,7 @@ pub struct AnalysisSettings {
 impl Default for AnalysisSettings {
     fn default() -> Self {
         Self {
+            implicit_none_value: false,
             strict_generic_narrowing: false,
             strict_equality_semantics: false,
             respect_type_ignore_comments: true,

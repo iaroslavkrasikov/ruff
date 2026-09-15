@@ -1543,6 +1543,23 @@ pub struct TerminalOptions {
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 pub struct AnalysisOptions {
+    /// Whether a parameter annotated as `T` with a literal `None` default should
+    /// have type `T | None` in both the function body and its call signature.
+    ///
+    /// Only literal `None` defaults trigger this widening, not other expressions
+    /// whose type is `None`.
+    ///
+    /// Defaults to `false`.
+    #[option(
+        default = r#"false"#,
+        value_type = "bool",
+        example = r#"
+            # Widen annotated parameter types when their default is literal None
+            implicit-none-value = true
+        "#
+    )]
+    pub implicit_none_value: Option<bool>,
+
     /// Whether ty should use strict narrowing for unspecialized generic classes in
     /// `isinstance()` and `issubclass()` checks, `match` class patterns, and `TypeIs` checks.
     ///
@@ -1735,6 +1752,7 @@ impl AnalysisOptions {
         diagnostics: &mut Vec<OptionDiagnostic>,
     ) -> AnalysisSettings {
         let Self {
+            implicit_none_value,
             strict_generic_narrowing,
             strict_equality_semantics,
             respect_type_ignore_comments,
@@ -1743,6 +1761,7 @@ impl AnalysisOptions {
         } = self;
 
         let AnalysisSettings {
+            implicit_none_value: implicit_none_value_default,
             strict_generic_narrowing: strict_generic_narrowing_default,
             strict_equality_semantics: strict_equality_semantics_default,
             respect_type_ignore_comments: respect_type_ignore_default,
@@ -1773,6 +1792,7 @@ impl AnalysisOptions {
             };
 
         AnalysisSettings {
+            implicit_none_value: implicit_none_value.unwrap_or(implicit_none_value_default),
             strict_generic_narrowing: strict_generic_narrowing
                 .unwrap_or(strict_generic_narrowing_default),
             strict_equality_semantics: strict_equality_semantics

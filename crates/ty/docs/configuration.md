@@ -83,6 +83,40 @@ any module where the first component contains the substring `test`, use `*test*.
 
 ---
 
+### `implicit-none-value`
+
+Whether a parameter annotated as `T` with a literal `None` default should
+have type `T | None` in both the function body and its call signature.
+
+Only literal `None` defaults trigger this widening, not other expressions
+whose type is `None`.
+
+Defaults to `false`.
+
+**Default value**: `false`
+
+**Type**: `bool`
+
+**Example usage**:
+
+=== "pyproject.toml"
+
+    ```toml
+    [tool.ty.analysis]
+    # Widen annotated parameter types when their default is literal None
+    implicit-none-value = true
+    ```
+
+=== "ty.toml"
+
+    ```toml
+    [analysis]
+    # Widen annotated parameter types when their default is literal None
+    implicit-none-value = true
+    ```
+
+---
+
 ### `replace-imports-with-any`
 
 A list of module glob patterns whose imports should be replaced with `typing.Any`.
@@ -738,6 +772,40 @@ any module where the first component contains the substring `test`, use `*test*.
     [overrides.analysis]
     # Suppress errors for all `test` modules except `test.foo`
     allowed-unresolved-imports = ["test.**", "!test.foo"]
+    ```
+
+---
+
+#### `implicit-none-value`
+
+Whether a parameter annotated as `T` with a literal `None` default should
+have type `T | None` in both the function body and its call signature.
+
+Only literal `None` defaults trigger this widening, not other expressions
+whose type is `None`.
+
+Defaults to `false`.
+
+**Default value**: `false`
+
+**Type**: `bool`
+
+**Example usage**:
+
+=== "pyproject.toml"
+
+    ```toml
+    [tool.ty.overrides.analysis]
+    # Widen annotated parameter types when their default is literal None
+    implicit-none-value = true
+    ```
+
+=== "ty.toml"
+
+    ```toml
+    [overrides.analysis]
+    # Widen annotated parameter types when their default is literal None
+    implicit-none-value = true
     ```
 
 ---

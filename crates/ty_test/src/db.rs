@@ -294,6 +294,7 @@ fn mdtest_analysis_settings(options: Option<&Analysis>) -> AnalysisSettings {
     };
 
     let AnalysisSettings {
+        implicit_none_value: implicit_none_value_default,
         strict_generic_narrowing: strict_generic_narrowing_default,
         strict_equality_semantics: strict_equality_semantics_default,
         respect_type_ignore_comments: respect_type_ignore_comments_default,
@@ -328,6 +329,9 @@ fn mdtest_analysis_settings(options: Option<&Analysis>) -> AnalysisSettings {
         };
 
     AnalysisSettings {
+        implicit_none_value: options
+            .implicit_none_value
+            .unwrap_or(implicit_none_value_default),
         strict_generic_narrowing: options
             .strict_generic_narrowing
             .unwrap_or(strict_generic_narrowing_default),

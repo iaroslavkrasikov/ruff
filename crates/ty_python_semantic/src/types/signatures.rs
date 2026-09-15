@@ -64,6 +64,27 @@ pub(super) enum ReturnCallableTypeVarScope {
     Public,
 }
 
+/// Apply the opt-in implicit optional annotation to literal `None` defaults.
+///
+/// Both body inference and callable signatures use this so they agree on the parameter type.
+pub(super) fn with_implicit_none_default<'db>(
+    db: &'db dyn Db,
+    definition: Definition<'db>,
+    annotated_type: Type<'db>,
+    default: Option<&ast::Expr>,
+) -> Type<'db> {
+    if default.is_some_and(ast::Expr::is_none_literal_expr)
+        && db
+            .analysis_settings(definition.file(db))
+            .implicit_none_value
+    {
+        let env = &ProgramEnvironment::from_definition(definition);
+        UnionType::from_two_elements(db, env, annotated_type, Type::none(db, env))
+    } else {
+        annotated_type
+    }
+}
+
 /// Infer the type of a parameter or return annotation in a function signature.
 ///
 /// This is very similar to `definition_expression_type`, but knows that `TypeInferenceBuilder`
@@ -5114,6 +5135,7 @@ impl<'db> Parameters<'db> {
                 db,
                 definition,
                 &param.parameter,
+                param.default(),
                 ParameterKind::PositionalOnly {
                     name: Some(param.parameter.name.id.clone()),
                     default_type: default_type(param),
@@ -5146,6 +5168,7 @@ impl<'db> Parameters<'db> {
                 db,
                 definition,
                 &arg.parameter,
+                arg.default(),
                 ParameterKind::PositionalOrKeyword {
                     name: arg.parameter.name.id.clone(),
                     default_type: default_type(arg),
@@ -5158,6 +5181,7 @@ impl<'db> Parameters<'db> {
                 db,
                 definition,
                 arg,
+                None,
                 ParameterKind::Variadic {
                     name: arg.name.id.clone(),
                 },
@@ -5169,6 +5193,7 @@ impl<'db> Parameters<'db> {
                 db,
                 definition,
                 &arg.parameter,
+                arg.default(),
                 ParameterKind::KeywordOnly {
                     name: arg.parameter.name.id.clone(),
                     default_type: default_type(arg),
@@ -5181,6 +5206,7 @@ impl<'db> Parameters<'db> {
                 db,
                 definition,
                 arg,
+                None,
                 ParameterKind::KeywordVariadic {
                     name: arg.name.id.clone(),
                 },
@@ -5827,6 +5853,7 @@ impl<'db> Parameter<'db> {
         db: &'db dyn Db,
         function_definition: Definition<'db>,
         parameter: &ast::Parameter,
+        default: Option<&ast::Expr>,
         kind: ParameterKind<'db>,
     ) -> Self {
         let index = semantic_index(db, function_definition.program_file(db));
@@ -5835,7 +5862,12 @@ impl<'db> Parameter<'db> {
         let (annotated_type, inferred_annotation, annotation_flags, has_starred_annotation) =
             if let Some(annotation) = parameter.annotation() {
                 (
-                    function_signature_expression_type(db, function_definition, annotation),
+                    with_implicit_none_default(
+                        db,
+                        function_definition,
+                        function_signature_expression_type(db, function_definition, annotation),
+                        default,
+                    ),
                     false,
                     function_signature_type_expression_flags(db, function_definition, annotation),
                     annotation.is_starred_expr(),

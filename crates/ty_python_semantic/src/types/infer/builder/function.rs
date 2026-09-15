@@ -43,7 +43,10 @@ use crate::{
         infer_definition_types,
         list_members::all_members,
         relation::TypeRelation,
-        signatures::{ReturnCallableTypeVarScope, function_signature_expression_type},
+        signatures::{
+            ReturnCallableTypeVarScope, function_signature_expression_type,
+            with_implicit_none_default,
+        },
         tuple::{TupleSpec, TupleSpecBuilder, TupleType},
         typed_dict::extract_unpacked_typed_dict_keys_from_kwargs_annotation,
         typevar::TypeVarSet,
@@ -1112,7 +1115,8 @@ impl<'db, 'ast> TypeInferenceBuilder<'db, 'ast> {
     /// Set initial declared type (if annotated) and inferred type for a function-parameter symbol,
     /// in the function body scope.
     ///
-    /// The declared type is the annotated type, if any, or `Unknown`.
+    /// The declared type is the annotated type, if any, or `Unknown`. With implicit None
+    /// defaults enabled, an annotation is widened to include `None` for a literal `None` default.
     ///
     /// The inferred type is the annotated type, if any. If there is no annotation, it is the union
     /// of `Unknown` and the type of the default value, if any.
@@ -1167,6 +1171,9 @@ impl<'db, 'ast> TypeInferenceBuilder<'db, 'ast> {
                     ));
                 }
             }
+
+            let declared_ty =
+                with_implicit_none_default(db, definition, declared_ty, default.as_deref());
 
             if let Some(default_expr) = default_expr {
                 let default_expr = default_expr.as_ref();

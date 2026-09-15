@@ -164,6 +164,10 @@ pub(crate) struct Environment {
 #[derive(Deserialize, Default, Debug, Clone)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub(crate) struct Analysis {
+    /// Whether literal `None` parameter defaults widen annotated types to `T | None`
+    /// in both the function body and its call signature.
+    pub(crate) implicit_none_value: Option<bool>,
+
     /// Whether narrowing with generic classes uses the top materialization.
     pub(crate) strict_generic_narrowing: Option<bool>,
 

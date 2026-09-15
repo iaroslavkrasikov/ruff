@@ -789,6 +789,60 @@ mod tests {
     }
 
     #[test]
+    fn implicit_none_value_configuration() -> anyhow::Result<()> {
+        for (filename, content, expected) in [
+            ("ty.toml", "[analysis]", None),
+            (
+                "ty.toml",
+                "[analysis]\nimplicit-none-value = false",
+                Some(false),
+            ),
+            (
+                "ty.toml",
+                "[analysis]\nimplicit-none-value = true",
+                Some(true),
+            ),
+            ("pyproject.toml", "[tool.ty.analysis]", None),
+            (
+                "pyproject.toml",
+                "[tool.ty.analysis]\nimplicit-none-value = false",
+                Some(false),
+            ),
+            (
+                "pyproject.toml",
+                "[tool.ty.analysis]\nimplicit-none-value = true",
+                Some(true),
+            ),
+        ] {
+            let system = TestSystem::default();
+            let root = SystemPathBuf::from(if cfg!(windows) { "C:/app" } else { "/app" });
+            system
+                .memory_file_system()
+                .write_files_all([(root.join(filename), content)])?;
+
+            let metadata = ProjectMetadata::discover_without_uv(&root, &system)?;
+            let analysis = metadata
+                .options()
+                .analysis
+                .as_ref()
+                .context("Expected analysis options")?;
+            assert_eq!(
+                analysis.implicit_none_value, expected,
+                "{filename}: {content}"
+            );
+
+            let db = TestDb::new(metadata);
+            assert_eq!(
+                db.project().settings(&db).analysis.implicit_none_value,
+                expected.unwrap_or(false),
+                "{filename}: {content}"
+            );
+        }
+
+        Ok(())
+    }
+
+    #[test]
     fn project_with_invalid_pyproject() -> anyhow::Result<()> {
         let system = TestSystem::default();
         let root = SystemPathBuf::from("/app");

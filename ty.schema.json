@@ -82,6 +82,13 @@
             "$ref": "#/definitions/string"
           }
         },
+        "implicit-none-value": {
+          "description": "Whether a parameter annotated as `T` with a literal `None` default should\nhave type `T | None` in both the function body and its call signature.\n\nOnly literal `None` defaults trigger this widening, not other expressions\nwhose type is `None`.\n\nDefaults to `false`.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "replace-imports-with-any": {
           "description": "A list of module glob patterns whose imports should be replaced with `typing.Any`.\n\nUnlike `allowed-unresolved-imports`, this setting replaces the module's type information\nwith `typing.Any` even if the module can be resolved. Import diagnostics are\nunconditionally suppressed for matching modules.\n\n- Prefix a pattern with `!` to exclude matching modules\n\nWhen multiple patterns match, later entries take precedence.\n\nGlob patterns can be used in combinations with each other. For example, to suppress errors for\nany module where the first component contains the substring `test`, use `*test*.**`.\n\nWhen multiple patterns match, later entries take precedence.",
           "type": [
